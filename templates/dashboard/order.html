@@ -1,0 +1,59 @@
+{% extends 'partials/base.html'%}
+{% block title %} Sales History {% endblock %}
+{% block page_title %}<i class="fa-solid fa-history mr-2"></i>Orders (รายการขาย){% endblock %}
+{% block content %}
+
+
+
+<div class="container-fluid my-4">
+  <div class="card shadow">
+    <div class="card-header">
+      <h4 class="mb-0">Sales History (ประวัติการขาย)</h4>
+    </div>
+
+    <div class="card-body">
+      {% if sales %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="bg-light">
+              <tr>
+                <th>#</th>
+                <th>Bill No (เลขที่บิล)</th>
+                <th>Receipt Status (สถานะใบเสร็จ)</th>
+                <th>Total Amount (ยอดรวม)</th>
+                <th>Time (เวลา)</th>
+                <th>View Bill (ดูบิล)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sale in sales %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ sale.sale_no }}</strong></td>
+                <td>
+                    {% if sale.is_cancelled %}
+                      <span class="badge badge-danger">Cancelled (ยกเลิก)</span>
+                    {% else %}
+                      <span class="badge badge-success">Normal (ปกติ)</span>
+                    {% endif %}
+                  </td>
+                <td>฿{{ sale.total_amount|floatformat:0 }}</td>
+                <td><small>{{ sale.created_at|date:"d/m/Y H:i" }}</small></td>
+                <td>
+                  <a class="btn btn-sm btn-success" href="{% url 'receipt' sale.id %}">
+                    Open Receipt (เปิดใบเสร็จ)
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted text-center mb-0">No sales yet (ยังไม่มีรายการขาย)</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

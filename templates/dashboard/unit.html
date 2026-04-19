@@ -1,0 +1,102 @@
+{% extends 'partials/base.html'%}
+{% block title %}Unit Management{% endblock %}
+{% block page_title %}<i class="fa-solid fa-ruler mr-2"></i>Units (หน่วยนับ){% endblock %}
+{% block content %}
+
+
+
+<div class="container-fluid">
+    <div class="mb-3 mt-4">
+        <a href="{% url 'dashboard-category' %}" class="btn btn-outline-dark rounded-circle shadow-sm"
+            style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;"
+            title="Back to Categories">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="row mb-4">
+        <!-- LEFT SIDE: Add Unit Form -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add Unit</h4>
+                </div>
+                <div class="card-body">
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label><strong>Unit Name</strong></label>
+                            <input type="text" name="name" class="form-control"
+                                placeholder="e.g., Box (กล่อง), Kg (กิโลกรัม)" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><strong>Symbol</strong></label>
+                            <input type="text" name="symbol" class="form-control" placeholder="e.g., BOX, KG (กก), PCS"
+                                required>
+                        </div>
+
+                        <button class="btn btn-success btn-block" type="submit">
+                            Add Unit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Units List Table -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">Units List</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Symbol</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if units %}
+                            {% for unit in units %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ unit.name }}</td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        {{ unit.symbol }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="{% url 'delete-unit' unit.pk %}" method="POST"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Delete this unit?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    No units available. Add one!
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

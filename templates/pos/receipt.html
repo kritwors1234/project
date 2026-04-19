@@ -1,0 +1,86 @@
+{% extends 'partials/base.html'%}
+{% block title %} Receipt {% endblock %}
+{% block page_title %}<i class="fa-solid fa-receipt mr-2"></i>Receipt (ใบเสร็จ){% endblock %}
+{% block content %}
+
+
+
+<div class="container">
+    <div class="row my-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Receipt (ใบเสร็จ)</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-center mb-3">
+                        <strong style="font-size: 24px;">{{ sale.sale_no }}</strong>
+                    </p>
+                    <hr>
+                    
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product (สินค้า)</th>
+                                <th>Quantity (จำนวน)</th>
+                                <th>Price (ราคา)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>฿{{ item.total_price|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <hr>
+                    
+                    
+                    <div class="row mb-3">
+                        <div class="col-6"><strong>Total Amount (รวมทั้งหมด):</strong></div>
+                        <div class="col-6 text-right"><h4 class="text-success">฿{{ sale.total_amount|floatformat:0 }}</h4></div>
+                    </div>
+                    
+                    <p class="text-muted text-center mb-3">
+                        <small>
+                            Payment Method: Cash (วิธีชำระ:เงินสด)<br>
+                            Time (เวลา): {{ sale.created_at|date:"d/m/Y H:i:s" }}
+                        </small>
+                    </p>
+                    
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <a href="{% url 'cashier' %}" class="btn btn-success mx-1">
+                                Back (ย้อนกลับ)
+                            </a>
+                            <button onclick="window.print()" class="btn btn-primary mx-1">
+                                Print
+                            </button>
+                        </div>
+                        
+                        <!-- ปุ่มยกเลิกใบเสร็จ -->
+                        {% if not sale.is_cancelled %}
+                        <form method="POST" action="{% url 'cancel-receipt' sale.id %}" class="d-block">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-block" type="submit"
+                                    onclick="return confirm('Confirm cancel this receipt? Stock will be refunded (ยืนยันยกเลิกบิลนี้? ระบบจะคืนสต็อกสินค้า)')">
+                                Cancel Receipt (ยกเลิกใบเสร็จ)
+                            </button>
+                        </form>
+                        {% else %}
+                            <div class="alert alert-danger mt-3">
+                                Receipt Cancelled (บิลนี้ถูกยกเลิกแล้ว){% if sale.cancelled_at %} ({{ sale.cancelled_at|date:"d/m/Y H:i" }}){% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

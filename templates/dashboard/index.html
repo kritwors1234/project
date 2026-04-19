@@ -1,0 +1,175 @@
+{% extends 'partials/base.html'%}
+{% block title %} Home Page {% endblock %}
+{% block page_title %}<i class="fa-solid fa-chart-line mr-2"></i>Dashboard (หน้าหลัก){% endblock %}
+{% block content %}
+{% include 'partials/topnav.html'%}
+
+<!-- ===== Graphs: Sales by Category (Donut + Bar) ===== -->
+<div class="row">
+  <!-- Bar Chart (Main) -->
+  <div class="col-lg-8 mb-4">
+    <div class="chart-container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 font-weight-bold">Sales by Category (ยอดขายตามหมวดหมู่)</h5>
+        <div id="bar-legend" class="d-flex flex-wrap" style="gap: 10px;"></div>
+      </div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="myChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Donut Chart (Sidebar) -->
+  <div class="col-lg-4 mb-4">
+    <div class="chart-container h-100 d-flex flex-column">
+      <h5 class="mb-4 font-weight-bold">Sales Proportion by Category (สัดส่วนยอดขายตามหมวดหมู่)</h5>
+      <div class="position-relative mb-4 donut-wrapper">
+        <canvas id="myChart1"></canvas>
+      </div>
+      <div id="donut-legend" class="flex-grow-1"></div>
+    </div>
+  </div>
+</div>
+
+{# ส่งข้อมูลเป็น JSON ฝังในหน้าแบบที่ editor ไม่ฟ้อง JS syntax #}
+<script id="cat-labels" type="application/json">{{ cat_labels|default:"[]"|safe }}</script>
+<script id="cat-amounts" type="application/json">{{ cat_amounts|default:"[]"|safe }}</script>
+
+<script>
+  // ปิด animation ทั้งหมดของ Chart.js แบบ Global
+  Chart.defaults.global.animation.duration = 0;
+
+  // ดึง JSON ออกมาเป็น array ใน JS
+  const labels = JSON.parse(document.getElementById('cat-labels').textContent || "[]");
+  const amounts = JSON.parse(document.getElementById('cat-amounts').textContent || "[]");
+
+  // สร้างสีให้ donut (ให้สีไม่ซ้ำกัน แต่คลุมโทน Ocean)
+  const oceanColors = ['#395886', '#628ECB', '#8AAEE0', '#B1C9EF', '#D5DEEF'];
+  const donutColors = labels.map((_, i) => oceanColors[i % oceanColors.length]);
+
+  // Donut chart (Chart.js v2.9.4)
+  (function () {
+    const donutEl = document.getElementById('myChart1');
+    if (!donutEl) return;
+    if (!labels.length) return;
+
+    new Chart(donutEl, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Sales (ยอดขายรวม) (บาท)',
+          data: amounts,
+          backgroundColor: donutColors,
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: { display: false },
+        tooltips: {
+          callbacks: {
+            label: function(tooltipItem, data) {
+              const i = tooltipItem.index;
+              const value = Number((data.datasets[0].data[i] || 0));
+              const total = data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0) || 1;
+              const pct = (value * 100 / total).toFixed(1);
+              return ' ฿' + value.toLocaleString() + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    });
+
+    // Generate custom HTML legend
+    const totalAmount = amounts.reduce((a, b) => Number(a) + Number(b), 0) || 1;
+    const legendHtml = labels.map((label, i) => {
+      const val = Number(amounts[i] || 0);
+      const pct = ((val / totalAmount) * 100).toFixed(1);
+      const color = donutColors[i];
+      return `
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 1px dashed var(--border-color);">
+          <div class="d-flex align-items-center">
+            <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:${color}; margin-right:12px;"></span>
+            <span style="font-weight:600; color:var(--text-primary); font-size: 0.95rem;">${label}</span>
+          </div>
+          <div class="text-right d-flex align-items-center">
+            <span class="mr-2" style="color:var(--text-secondary); font-weight:500;">฿${val.toLocaleString()}</span>
+            <span class="badge" style="background-color: var(--ocean-90); color: var(--ocean-10); padding: 5px 8px;">${pct}%</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    const legendContainer = document.getElementById('donut-legend');
+    if (legendContainer) {
+      legendContainer.innerHTML = legendHtml;
+    }
+  })();
+
+  // Bar chart (Chart.js v2.9.4)
+  (function () {
+    const barEl = document.getElementById('myChart');
+    if (!barEl) return;
+    if (!labels.length) return;
+
+    new Chart(barEl, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Sales (ยอดขาย)',
+          data: amounts,
+          backgroundColor: donutColors,
+          borderColor: donutColors,
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: { display: false },
+        tooltips: {
+          callbacks: {
+            label: function(tooltipItem) {
+              return ' ฿' + Number(tooltipItem.yLabel || 0).toLocaleString();
+            }
+          }
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true,
+              callback: function(value) {
+                return '฿' + Number(value).toLocaleString();
+              }
+            }
+          }]
+        }
+      }
+    });
+
+    // Generate custom horizontal legend for Bar Chart
+    const totalAmountBar = amounts.reduce((a, b) => Number(a) + Number(b), 0) || 1;
+    const barLegendHtml = labels.map((label, i) => {
+      const val = Number(amounts[i] || 0);
+      const pct = ((val / totalAmountBar) * 100).toFixed(0);
+      const color = donutColors[i];
+      return `
+        <div class="d-flex align-items-center">
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${color}; margin-right:6px;"></span>
+          <span style="font-size: 0.85rem; font-weight:600; color:var(--text-secondary);">${label} - ${pct}%</span>
+        </div>
+      `;
+    }).join('');
+    
+    const barLegendContainer = document.getElementById('bar-legend');
+    if (barLegendContainer) {
+      barLegendContainer.innerHTML = barLegendHtml;
+    }
+  })();
+</script>
+<!-- ===== End Graphs ===== -->
+
+{% endblock %}
