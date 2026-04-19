@@ -1,0 +1,375 @@
+{% extends 'partials/base.html'%}
+{% block title %} POS Cashier {% endblock %}
+{% block content %}
+
+
+<div class="container">
+    <div class="row my-4">
+        <!-- LEFT: Search & Products -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4>Search Product</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Search Box -->
+                    <div class="input-group mb-3" style="max-width: 500px;">
+                        <input type="text" class="form-control form-control-lg" id="searchInput" 
+                               placeholder="Search..." 
+                               autocomplete="off">
+                        <div class="input-group-append">
+                            <span class="input-group-text">+</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="searchResults" class="row"></div>
+                    
+                    <!-- All Products -->
+                    <h5 class="mt-4">All Products</h5>
+                    <div class="row" id="allProducts">
+                        {% for product in products %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ product.name }}</h6>
+                                    <p class="text-muted mb-1">
+                                        <small>
+                                            SKU: {{ product.sku }}<br>
+                                            Category: {{ product.category.name }}
+                                        </small>
+                                    </p>
+                                    <p class="text-danger mb-2">
+                                        <strong>฿{{ product.selling_price|floatformat:0 }}</strong>
+                                    </p>
+                                    <p class="text-secondary mb-3">
+                                        <small> Stock: {{ product.quantity }}</small>
+                                    </p>
+                                    
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control qty-input" 
+                                               value="1" min="1" max="{{ product.quantity }}"
+                                               data-product-id="{{ product.id }}"
+                                               data-product-name="{{ product.name }}"
+                                               data-product-price="{{ product.selling_price }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-success add-to-cart-btn" 
+                                                    type="button"
+                                                    data-product-id="{{ product.id }}">
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RIGHT: Cart & Checkout -->
+
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Cart <span class="badge badge-light" id="cartCount">{{ cart_count }}</span></h5>
+                </div>
+
+                <div class="card shadow mb-3">
+                    <div class="card-body py-2">
+                        <small class="text-muted">
+                            Time: <span id="clock"></span>
+                        </small>
+                    </div>
+                </div>
+                <!-- Cart Items -->
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm" id="cartTable">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartItems">
+                            {% if cart %}
+                                {% for product_id, item in cart.items %}
+                                <tr data-product-id="{{ item.id }}">
+                                    <td><small>{{ item.name }}</small></td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm update-qty" 
+                                               value="{{ item.quantity }}" min="1"
+                                               data-product-id="{{ item.id }}" style="width: 60px;">
+                                    </td>
+                                    <td><small>฿{{ item.total|floatformat:0 }}</small></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary remove-btn" 
+                                                data-product-id="{{ item.id }}">
+                                            ×
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        Cart is empty
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Summary -->
+                <div class="card-footer bg-light">
+                    
+                    <!--<h4 class="mb-3">
+                        รวม: <strong class="text-dark" id="totalAmount">฿{{ total|floatformat:0 }}</strong>
+                    </h4>-->
+                    
+                    {% if cart %}
+                    <form method="POST" action="{% url 'pos-checkout' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-block btn-lg mt-3" type="submit">
+                             Cash Payment
+                        </button>
+                    </form>
+                    
+                    <button class="btn btn-danger-light btn-block btn-sm mt-2" id="clearCartBtn">
+                         Clear All
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') ? 
+                      document.querySelector('[name=csrfmiddlewaretoken]').value : 
+                      '{{ csrf_token }}';
+
+    // ==================== SEARCH ====================
+    $('#searchInput').on('keyup', async function() {
+        const query = $(this).val();
+        const searchResults = $('#searchResults');
+        
+        if (query.length < 1) {
+            searchResults.html('');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`{% url 'pos-search' %}?q=${query}`);
+            const data = await response.json();
+            
+            if (data.products.length === 0) {
+                searchResults.html('<p class="text-muted">Product not found</p>');
+                return;
+            }
+            
+            let html = '';
+            data.products.forEach(product => {
+                html += `
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 border-success">
+                            <div class="card-body">
+                                <h6 class="card-title">${product.name}</h6>
+                                <p class="text-muted mb-1">
+                                    <small>
+                                        SKU: ${product.sku}<br>
+                                        Cat: ${product.category}
+                                    </small>
+                                </p>
+                                <p class="text-danger mb-2">
+                                    <strong>฿${product.price.toFixed(0)}</strong>
+                                </p>
+                                <p class="text-secondary mb-3">
+                                    <small>Stock: ${product.quantity}</small>
+                                </p>
+                                
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control qty-input" 
+                                           value="1" min="1" max="${product.quantity}"
+                                           data-product-id="${product.id}"
+                                           data-product-name="${product.name}"
+                                           data-product-price="${product.price}">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-success add-to-cart-btn" 
+                                                type="button"
+                                                data-product-id="${product.id}">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            searchResults.html(html);
+            attachAddToCartEvents();
+            
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+    //Clock
+    function pad2(n) { return n.toString().padStart(2, '0'); }
+    function updateClock() {
+    const d = new Date();
+    const day = pad2(d.getDate());
+    const month = pad2(d.getMonth() + 1);
+    const year = d.getFullYear();
+    const h = pad2(d.getHours());
+    const m = pad2(d.getMinutes());
+    const s = pad2(d.getSeconds());
+    const el = document.getElementById('clock');
+    if (el) el.textContent = `${day}/${month}/${year} ${h}:${m}:${s}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+    // ==================== ADD TO CART ====================
+    function attachAddToCartEvents() {
+        $('.add-to-cart-btn').off('click').on('click', function() {
+            const btn = $(this);
+            const productId = btn.data('product-id');
+            const qtyInput = btn.closest('.input-group').find('input[type="number"]');
+            const quantity = parseInt(qtyInput.val()) || 1;
+            
+            addToCart(productId, quantity);
+        });
+    }
+
+    function addToCart(productId, quantity) {
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', quantity);
+        formData.append('csrfmiddlewaretoken', csrftoken);
+        
+        fetch('{% url "pos-add" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateCart();
+                $('#searchInput').val('');
+                $('#searchResults').html('');
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // ==================== UPDATE QUANTITY ====================
+    $(document).on('change', '.update-qty', function() {
+        const productId = $(this).data('product-id');
+        const quantity = parseInt($(this).val()) || 1;
+        
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', quantity);
+        formData.append('csrfmiddlewaretoken', csrftoken);
+        
+        fetch('{% url "pos-update" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateCart();
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // ==================== REMOVE FROM CART ====================
+    $(document).on('click', '.remove-btn', function() {
+        const productId = $(this).data('product-id');
+        
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('csrfmiddlewaretoken', csrftoken);
+        
+        fetch('{% url "pos-remove" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateCart();
+                showToast('Removed from cart', 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // ==================== CLEAR CART ====================
+    $('#clearCartBtn').on('click', function() {
+        if (!confirm('Confirm clearing all items?')) return;
+        
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrftoken);
+        
+        fetch('{% url "pos-clear" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateCart();
+                showToast('Cart cleared', 'success');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // ==================== UPDATE CART DISPLAY ====================
+    function updateCart() {
+        location.reload();
+    }
+
+    // ==================== SHOW TOAST ====================
+    function showToast(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const toast = `
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                 role="alert" style="top: 80px; right: 20px; width: 300px; z-index: 9999;">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">×</button>
+            </div>
+        `;
+        $('body').append(toast);
+        
+        setTimeout(() => {
+            $('.alert').fadeOut(function() { $(this).remove(); });
+        }, 3000);
+    }
+
+    // ==================== INIT ====================
+    $(document).ready(function() {
+        attachAddToCartEvents();
+    });
+</script>
+{% endblock %}

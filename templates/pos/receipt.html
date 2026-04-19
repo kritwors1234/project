@@ -1,0 +1,82 @@
+{% extends 'partials/base.html'%}
+{% block title %} Receipt {% endblock %}
+{% block content %}
+
+
+
+<div class="container">
+    <div class="row my-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Receipt</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-center mb-3">
+                        <strong style="font-size: 24px;">{{ sale.sale_no }}</strong>
+                    </p>
+                    <hr>
+                    
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>฿{{ item.total_price|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <hr>
+                    
+                    
+                    <div class="row mb-3">
+                        <div class="col-6"><strong>Total:</strong></div>
+                        <div class="col-6 text-right"><h4 class="text-dark">฿{{ sale.total_amount|floatformat:0 }}</h4></div>
+                    </div>
+                    
+                    <p class="text-muted text-center mb-3">
+                        <small>
+                            Payment: Cash<br>
+                            Time: {{ sale.created_at|date:"d/m/Y H:i:s" }}
+                        </small>
+                    </p>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'cashier' %}" class="btn btn-dark btn-lg">
+                            cashier
+                        </a>
+                        <button onclick="window.print()" class="btn btn-info-light btn-lg">
+                            print
+                        </button>
+                     <!-- ปุ่มยกเลิกใบเสร็จ -->
+                        {% if not sale.is_cancelled %}
+                        <form method="POST" action="{% url 'cancel-receipt' sale.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-danger-light btn-lg" type="submit"
+                                    onclick="return confirm('Confirm cancellation? Stock will be returned.')">
+                            Cancel Receipt
+                            </button>
+                        </form>
+                        {% else %}
+                            <div class="alert alert-danger mt-3">
+                            This receipt has been cancelled{% if sale.cancelled_at %} ({{ sale.cancelled_at|date:"d/m/Y H:i" }}){% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

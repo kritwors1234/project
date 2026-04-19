@@ -1,0 +1,214 @@
+{% extends 'partials/base.html'%}
+{% block title %} Product page {% endblock %}
+{% block content %}
+
+{% include 'partials/topnav.html'%}
+
+
+<div class="container">
+    <div class="row my-4">
+        <!-- Form Column -->
+        <div class="col-md-4">
+            <div class="border bg-white p-3">
+                <h5>
+                    {% if is_edit %}
+                        Edit Product
+                    {% else %}
+                        Add Product
+                    {% endif %}
+                </h5>
+                <hr class="my-2">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="alert alert-danger mt-2 mb-0">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.category.id_for_label }}">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="alert alert-danger mt-2 mb-0">
+                                {{ form.category.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Unit</label>
+                        {{ form.unit }}
+                        <small class="form-text text-muted">
+                            Product unit (e.g., Box, KG, Pieces)
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.sku.id_for_label }}">SKU</label>
+                        {{ form.sku }}
+                        {% if form.sku.errors %}
+                            <div class="alert alert-danger mt-2 mb-0">
+                                {{ form.sku.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                               value="{{ form.instance.quantity }}" placeholder="Enter quantity">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cost Price</label>
+                        {{ form.cost_price }} 
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Selling Price</label>
+                        {{ form.selling_price }}  
+                    </div>
+                    
+
+                    {% if is_edit %}
+                        <button class="btn btn-success btn-block" type="submit">
+                            Update Product
+                        </button>
+                        <a href="{% url 'dashboard-product' %}" class="btn btn-secondary btn-block">
+                            Cancel
+                        </a>
+                    {% else %}
+                        <button class="btn btn-success btn-block" type="submit">
+                            Add Product
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'dashboard-category' %}" class="btn btn-warning btn-block">
+                        Edit Category
+                    </a>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Table Column -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Products List</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Unit</th>
+                                    <th>Cost</th> 
+                                    <th>Sell</th>  
+                                    <th>Profit</th> 
+                                    <th>%</th>
+                                    <th>Qty</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if products %}
+                                {% for product in products %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.category.name }}</td>
+                                    <td>
+                                        {% if product.unit %}
+                                            <span class="badge badge-info">
+                                                {{ product.unit.symbol }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>฿{{ product.cost_price }}</td>  
+                                    <td>฿{{ product.selling_price }}</td>  
+                                    <td>
+                                        {% if product.profit_per_unit > 0 %}
+                                            <span class="badge badge-success">
+                                                +฿{{ product.profit_per_unit }}
+                                            </span>
+                                        {% elif product.profit_per_unit < 0 %}
+                                            <span class="badge badge-danger">
+                                                ฿{{ product.profit_per_unit }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">
+                                                ฿0
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product.profit_margin > 0 %}
+                                            <span class="badge badge-success">
+                                                {{ product.profit_margin|floatformat:1 }}%
+                                            </span>
+                                        {% elif product.profit_margin < 0 %}
+                                            <span class="badge badge-danger">
+                                                {{ product.profit_margin|floatformat:1 }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">
+                                                0%
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ product.quantity }}</td>
+                                    
+                                    <td>
+                                        <a href="{% url 'dashboard-edit-product' product.id %}" 
+                                           class="btn btn-sm btn-warning">
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="{% url 'dashboard-delete-product' product.id %}" 
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('Delete this product?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted">
+                                            No products available.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

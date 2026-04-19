@@ -1,0 +1,69 @@
+/* 
+   FoxInventory - Minimalist Design System (No Hover)
+*/
+:root {
+    --bg-main: #f4f6f8;
+    --bg-card: #ffffff;
+    --border-color: #e5e7eb;
+    --text-main: #000000;
+    --text-white: #ffffff;
+    --color-black: #000000;
+    --color-gray-light: #f3f4f6;
+    
+    /* Theme Colors */
+    --c-success: #c8e6c9; /* Light Green */
+    --c-warning: #fff9c4; /* Light Yellow */
+    --c-danger: #ffcdd2;  /* Light Red */
+    --c-info: #e1f5fe;    /* Light Blue */
+}
+
+/* Global: Disable ALL Hover/Focus effects in one place */
+*, *:hover, *:focus, *:active {
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Base Styles */
+body { background-color: var(--bg-main) !important; color: var(--text-main) !important; font-family: sans-serif; }
+a { color: inherit !important; text-decoration: none !important; }
+
+/* Layout Components */
+.navbar, .bg-dark { background-color: var(--color-black) !important; }
+.navbar-brand, .nav-link { color: var(--text-white) !important; font-weight: 600; }
+
+.card { border: 1px solid var(--border-color) !important; background: var(--bg-card) !important; border-radius: 8px; margin-bottom: 1rem; box-shadow: none !important; }
+.shadow { box-shadow: none !important; }
+.card-header { background: var(--color-black) !important; color: var(--text-white) !important; padding: 1rem !important; font-weight: 600; }
+.card-header * { color: var(--text-white) !important; }
+
+/* Buttons: Pure & Simple (No Hover Logic) */
+.btn { border: 1px solid var(--border-color) !important; border-radius: 6px !important; padding: 0.5rem 1rem !important; font-weight: 600 !important; }
+.btn-dark { background: var(--color-black) !important; color: var(--text-white) !important; }
+.btn-success { background: var(--c-success) !important; color: var(--text-main) !important; }
+.btn-warning { background: var(--c-warning) !important; color: var(--text-main) !important; }
+.btn-danger-light { background: var(--c-danger) !important; color: var(--text-main) !important; }
+.btn-danger { background: #ff5252 !important; color: var(--text-white) !important; }
+.btn-info-light { background: var(--c-info) !important; color: var(--text-main) !important; }
+.btn-block { display: block; width: 100%; }
+
+/* Table Styles */
+table td, table th { white-space: nowrap !important; vertical-align: middle !important; border-top: 1px solid var(--border-color) !important; }
+thead th { background: var(--color-gray-light) !important; color: var(--text-main) !important; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; }
+
+/* Forms */
+.form-control { border: 1px solid var(--border-color) !important; border-radius: 6px !important; padding: 0.6rem !important; height: auto !important; }
+
+/* Bootstrap Overrides (Force Consistency) */
+.btn-primary, .bg-primary { background: var(--color-black) !important; color: var(--text-white) !important; }
+.btn-secondary { background: #ffffff !important; color: var(--text-main) !important; }
+.badge { padding: 5px 10px !important; border-radius: 4px !important; color: #000000 !important; }
+.badge-success { background: var(--c-success) !important; }
+.badge-danger { background: var(--c-danger) !important; }
+.badge-light { background: #ffffff !important; }
+#cartCount { color: #000000 !important; }
+
+/* Text Utilities */
+.text-muted, .text-secondary { color: var(--text-main) !important; opacity: 0.7; }
+.text-white { color: var(--text-white) !important; }

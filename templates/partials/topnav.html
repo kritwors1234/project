@@ -1,0 +1,63 @@
+<!--Topside-->
+<div class="container">
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    Information
+                </div>
+                <div class="card-body">
+                    
+                    <h3 class="my-4">
+                        Total Stock Cost: ฿{{ nav_total_cost_stock|floatformat:2 }}
+                      </h3>
+                    <h3 class="my-4">
+                       | Expected Profit: ฿{{ nav_total_expected_profit_stock|floatformat:2 }}
+                    </h3>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    Statistics
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark" href="{%url 'dashboard-sales-summary'%}">
+                                <div class="card my-card text-center p-3">
+                                    <h4>Summary<i class="fas fa-users"></i></h4>
+                                    <h3>฿{{ nav_total_sales_amount|floatformat:2 }}</h3>
+
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark" href="{%url 'dashboard-product'%}">
+                                <div class="card my-card text-center p-3">
+                                    <h4>Products <i class="fas fa-box"></i></h4>
+                                    <h3>{{ nav_total_product_pieces }}</h3>
+
+
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark" href="{%url 'sales-history'%}">
+                                <div class="card my-card text-center p-3">
+                                    <h4>Orders <i class="fas fa-shipping-fast"></i></h4>
+                                    <h3>{{ nav_total_orders }}</h3>
+
+
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End Topside-->

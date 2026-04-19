@@ -1,0 +1,58 @@
+{% extends 'partials/base.html'%}
+{% block title %} Sales History {% endblock %}
+{% block content %}
+
+{% include 'partials/topnav.html'%}
+
+<div class="container my-4">
+  <div class="card shadow">
+    <div class="card-header bg-secondary text-white">
+      <h4 class="mb-0">Sales History</h4>
+    </div>
+
+    <div class="card-body">
+      {% if sales %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="bg-light">
+              <tr>
+                <th>#</th>
+                <th>Sale No</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sale in sales %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ sale.sale_no }}</strong></td>
+                <td>
+                    {% if sale.is_cancelled %}
+                      <span class="badge badge-danger">Cancelled</span>
+                    {% else %}
+                      <span class="badge badge-success">Normal</span>
+                    {% endif %}
+                  </td>
+                <td>฿{{ sale.total_amount|floatformat:0 }}</td>
+                <td><small>{{ sale.created_at|date:"d/m/Y H:i" }}</small></td>
+                <td>
+                  <a class="btn btn-sm btn-success" href="{% url 'receipt' sale.id %}">
+                    View Receipt
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted text-center mb-0">No sales history available.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

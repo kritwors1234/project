@@ -1,0 +1,98 @@
+{% extends 'partials/base.html'%}
+{% block title %} Category page {% endblock %}
+{% block content %}
+
+{% include 'partials/topnav.html'%}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Add Category</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'dashboard-category' %}">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">
+                                <strong>Category Name</strong>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <button class="btn btn-success btn-block" type="submit">
+                            Add Category
+                        </button>
+                        <!-- เพิ่มใน category.html -->
+                        <br>
+                        <a href="{% url 'dashboard-unit' %}" class="btn btn-warning">
+                            Manage Units
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Categories List</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if categories %}
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.created_at|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <form method="POST" action="{% url 'delete-category' category.pk %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        No categories yet. Create one!
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'partials/base.html'%}
+{% block title %} Sales Summary {% endblock %}
+{% block content %}
+{% include 'partials/topnav.html'%}
+
+<div class="container my-4">
+  <div class="card shadow">
+    <div class="card-header bg-secondary text-white">
+      <h4 class="mb-0">Product Sales Summary</h4>
+    </div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <strong>Total Sales:</strong>
+        ฿{{ total_sales_all|floatformat:2 }}
+        <br>
+        <strong>Total Profit:</strong>
+        ฿{{ total_profit_all|floatformat:2 }}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover bg-white">
+          <thead class="bg-light">
+            <tr>
+              <th>#</th>
+              <th>Product</th>
+              <th>Category</th>
+              <th class="text-end">Qty Sold</th>
+              <th class="text-end">Total Sales</th>
+              <th class="text-end">Total Profit</th>
+              <th class="text-end">% of Total Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in summary %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ row.product__name }}</td>
+              <td>{{ row.product__category__name }}</td>
+              <td class="text-end">{{ row.total_qty }}</td>
+              <td class="text-end">฿{{ row.total_amount|floatformat:2 }}</td>
+              <td class="text-end">฿{{ row.total_profit|floatformat:2 }}</td>
+              <td class="text-end">
+                {% if total_profit_all %}
+                  {% widthratio row.total_profit total_profit_all 100 %}%
+                {% else %}
+                  0%
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">No sales data available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

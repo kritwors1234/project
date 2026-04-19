@@ -1,0 +1,94 @@
+{% extends 'partials/base.html'%}
+{% block title %}Unit Management{% endblock %}
+{% block content %}
+
+{% include 'partials/topnav.html'%}
+
+<div class="container">
+    <div class="row my-4">
+        <!-- LEFT SIDE: Add Unit Form -->
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Add Unit</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label><strong>Unit Name</strong></label>
+                            <input type="text" name="name" class="form-control" 
+                                   placeholder="e.g., Box, Kilogram" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><strong>Symbol</strong></label>
+                            <input type="text" name="symbol" class="form-control" 
+                                   placeholder="e.g., BOX, KG, PCS" required>
+                        </div>
+
+                        <button class="btn btn-success btn-block" type="submit">
+                            Add Unit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Unit List Table -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Units List</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Symbol</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if units %}
+                                {% for unit in units %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ unit.name }}</td>
+                                    <td>
+                                        <span class="badge badge-primary">
+                                            {{ unit.symbol }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form action="{% url 'delete-unit' unit.pk %}" 
+                                              method="POST" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Delete this unit?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        No units available. Add one!
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

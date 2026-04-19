@@ -1,0 +1,124 @@
+{% extends 'partials/base.html'%}
+{% block title %} Home Page {% endblock %}
+
+{% block content %}
+{% include 'partials/topnav.html'%}
+
+<!-- ===== Graphs: Sales by Category (Donut + Bar) ===== -->
+<div class="container">
+  <div class="row my-5">
+    <div class="col-md-6 mb-3">
+      <div class="bg-white p-3">
+        <h5 class="mb-3">Sales Share by Category</h5>
+        <canvas id="myChart1" width="400" height="300"></canvas>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <div class="bg-white p-3">
+        <h5 class="mb-3">Sales Volume by Category</h5>
+        <canvas id="myChart" width="400" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ส่งข้อมูลเป็น JSON ฝังในหน้าแบบที่ editor ไม่ฟ้อง JS syntax #}
+<script id="cat-labels" type="application/json">{{ cat_labels|default:"[]"|safe }}</script>
+<script id="cat-amounts" type="application/json">{{ cat_amounts|default:"[]"|safe }}</script>
+
+<script>
+  // ดึง JSON ออกมาเป็น array ใน JS
+  const labels = JSON.parse(document.getElementById('cat-labels').textContent || "[]");
+  const amounts = JSON.parse(document.getElementById('cat-amounts').textContent || "[]");
+
+  // Emerald Green Palette (Premium Style)
+  const donutColors = [
+    'rgba(16, 185, 129, 0.8)', // Emerald
+    'rgba(5, 150, 105, 0.8)',  // Medium Green
+    'rgba(52, 211, 153, 0.8)', // Light Emerald
+    'rgba(4, 120, 87, 0.8)',   // Dark Emerald
+    'rgba(20, 184, 166, 0.8)', // Teal Green
+    'rgba(110, 231, 183, 0.8)'  // Pale Emerald
+  ];
+  const barColors = donutColors; // Use same shades for bars
+
+  // Donut chart (Chart.js v2.9.4)
+  (function () {
+    const donutEl = document.getElementById('myChart1');
+    if (!donutEl) return;
+    if (!labels.length) return;
+
+    new Chart(donutEl, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Sales (฿)',
+          data: amounts,
+          backgroundColor: donutColors,
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        legend: { position: 'bottom' },
+        tooltips: {
+          callbacks: {
+            label: function (tooltipItem, data) {
+              const i = tooltipItem.index;
+              const value = Number((data.datasets[0].data[i] || 0));
+              const total = data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0) || 1;
+              const pct = (value * 100 / total).toFixed(1);
+              return ' ฿' + value.toLocaleString() + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    });
+  })();
+
+  // Bar chart (Chart.js v2.9.4)
+  (function () {
+    const barEl = document.getElementById('myChart');
+    if (!barEl) return;
+    if (!labels.length) return;
+
+    new Chart(barEl, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Sales (฿)',
+          data: amounts,
+          backgroundColor: barColors,
+          borderColor: barColors.map(c => c.replace('0.8', '1')),
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        tooltips: {
+          callbacks: {
+            label: function (tooltipItem) {
+              return ' ฿' + Number(tooltipItem.yLabel || 0).toLocaleString();
+            }
+          }
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true,
+              callback: function (value) {
+                return '฿' + Number(value).toLocaleString();
+              }
+            }
+          }]
+        }
+      }
+    });
+  })();
+</script>
+<!-- ===== End Graphs ===== -->
+
+{% endblock %}
